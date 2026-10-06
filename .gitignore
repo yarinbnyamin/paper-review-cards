@@ -1,0 +1,9 @@
+# per-paper data, generated
+items.json
+state.json
+queue.jsonl
+processed.txt
+old.tex
+backup/
+__pycache__/
+.DS_Store

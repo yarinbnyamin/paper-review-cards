@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper Review Cards</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1f;--mute:#6b6b70;--line:#e2e2df;--note:#eef3fb;--noteb:#9db4dc;
+--del:#fde2e1;--delink:#a1261d;--ins:#dff3e4;--insink:#1d6b34;--acc:#1f7a3a;--rej:#b3261e;--chg:#a15c00;--btn:#f0f0ee}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#17181a;--card:#202124;--ink:#ececec;--mute:#a0a0a6;--line:#34353a;--note:#1e2a3d;--noteb:#3d5a8a;
+--del:#4a2020;--delink:#ffb4ab;--ins:#1d3b26;--insink:#a6e3b8;--acc:#5fd38a;--rej:#ff8a80;--chg:#ffc266;--btn:#2b2c30}}
+:root[data-theme="dark"]{--bg:#17181a;--card:#202124;--ink:#ececec;--mute:#a0a0a6;--line:#34353a;--note:#1e2a3d;--noteb:#3d5a8a;
+--del:#4a2020;--delink:#ffb4ab;--ins:#1d3b26;--insink:#a6e3b8;--acc:#5fd38a;--rej:#ff8a80;--chg:#ffc266;--btn:#2b2c30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;z-index:2}
+header h1{font-size:16px;margin:0 8px 0 0}.pill{font-size:13px;color:var(--mute)}
+.bar{flex:1;min-width:120px;height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--acc)}
+main{max-width:1000px;margin:0 auto;padding:16px}
+.dots{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px}.dot{width:26px;height:22px;border-radius:4px;border:1px solid var(--line);background:var(--card);font-size:11px;color:var(--mute);cursor:pointer;display:grid;place-items:center}
+.dot.st-edit{background:#dfe8fb;color:#2c55a8}
+.dot.loc{border-style:dashed;border-color:var(--ink)}
+.dot.s-pending{background:#f5c518;color:#3d2f00;border-color:#f5c518}.dot.s-done{background:#1f7a3a;color:#fff;border-color:#1f7a3a}.dot.s-review{background:#c62828;color:#fff;border-color:#c62828}.dot.s-skip{background:#8a8a8f;color:#fff;border-color:#8a8a8f}
+button.done{background:#f5c518;border-color:#c9a000;color:#3d2f00;font-weight:600}button.done:disabled{opacity:.4;cursor:not-allowed}
+.sbadge{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:600}.sb-pending{background:#f5c518;color:#3d2f00}.sb-done{background:#1f7a3a;color:#fff}.sb-skip{background:#8a8a8f;color:#fff}.sb-review{background:#c62828;color:#fff}
+.dot.cur{outline:2px solid var(--ink)}.dot.st-accept{background:var(--ins);color:var(--insink)}.dot.st-reject{background:var(--del);color:var(--delink)}.dot.st-change{background:#fff3d6;color:#7a4a00}
+@media (prefers-color-scheme: dark){.dot.st-change{background:#3d3010;color:var(--chg)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.meta{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;color:var(--mute);font-size:13px;margin-bottom:10px}
+.badge{font-size:11px;padding:2px 6px;border-radius:4px;background:#fff3d6;color:#7a4a00}
+.note{background:var(--note);border-left:3px solid var(--noteb);padding:10px 12px;border-radius:6px;margin:0 0 14px;white-space:pre-wrap}
+.note b{display:block;font-size:12px;color:var(--mute);margin-bottom:4px;font-weight:600}
+.chg{border:1px solid var(--line);border-radius:8px;margin:0 0 12px;overflow:hidden}
+.chg .h{font-size:12px;color:var(--mute);padding:6px 10px;border-bottom:1px solid var(--line)}
+.side{display:grid;grid-template-columns:1fr 1fr}@media(max-width:760px){.side{grid-template-columns:1fr}}
+.side>div{padding:10px 12px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word}
+.side>div:first-child{border-right:1px solid var(--line)}@media(max-width:760px){.side>div:first-child{border-right:0;border-bottom:1px solid var(--line)}}
+.lab{display:block;font:600 11px -apple-system,sans-serif;color:var(--mute);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+del{background:var(--del);color:var(--delink);text-decoration:line-through}ins{background:var(--ins);color:var(--insink);text-decoration:none}
+.empty{color:var(--mute);font-style:italic}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--btn);color:var(--ink);cursor:pointer}
+button.a{border-color:var(--acc);color:var(--acc)}button.r{border-color:var(--rej);color:var(--rej)}button.c{border-color:var(--chg);color:var(--chg)}
+button.on.a{background:var(--acc);color:#fff}button.on.r{background:var(--rej);color:#fff}button.on.c{background:var(--chg);color:#fff}
+textarea{width:100%;min-height:80px;margin-top:10px;font:13px/1.5 ui-monospace,Menlo,monospace;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.nav{display:flex;justify-content:space-between;margin-top:14px}.kbd{font-size:12px;color:var(--mute)}
+#out{display:none}
+.ctx{color:var(--mute);opacity:.75}
+.mark{display:block;margin:4px 0;padding:3px 8px;border-radius:4px;background:var(--note);border-left:3px solid var(--noteb);color:var(--ink);font:600 12px -apple-system,sans-serif;opacity:1}
+.far{font-size:12px;color:var(--mute);padding:6px 12px;border-bottom:1px solid var(--line);background:var(--note)}
+.more{font-size:12px;padding:4px 10px;margin:6px 12px 10px}
+button.e{border-color:#3f6fd1;color:#3f6fd1}button.on.e{background:#3f6fd1;color:#fff}
+.edit{display:block;width:100%;min-height:90px;margin:0;border:0;border-top:1px dashed var(--line);border-radius:0;background:var(--bg)}
+.edlab{font:600 11px -apple-system,sans-serif;color:#3f6fd1;padding:8px 12px 0;text-transform:uppercase;letter-spacing:.04em}
+.thread{border:1px solid var(--line);border-radius:8px;margin:0 0 14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.thread>b{font-size:12px;color:var(--mute);font-weight:600}
+.msg{padding:8px 10px;border-radius:8px;white-space:pre-wrap;max-width:92%}
+.msg .who{display:block;font:600 11px -apple-system,sans-serif;color:var(--mute);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.msg.you{align-self:flex-end;background:#fff3d6}.msg.claude{align-self:flex-start;background:var(--note)}
+.msg.sys{align-self:flex-end;background:transparent;color:var(--mute);font-size:12px;padding:0 4px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .msg.you{background:#3d3010}}
+:root[data-theme="dark"] .msg.you{background:#3d3010}
+</style></head><body>
+<header><h1>Paper review cards</h1><span class="pill" id="count"></span><div class="bar"><i id="prog"></i></div>
+<label class="pill"><input type="checkbox" id="showdone"> Show finished</label><button id="exp">Copy decisions</button></header>
+<main><div class="dots" id="dots"></div><div id="card"></div>
+<div class="nav"><button id="prev">&larr; Previous</button><span class="kbd">&larr; &rarr; move between cards</span><button id="next">Next &rarr;</button></div>
+<textarea id="out" readonly></textarea></main>
+<script>
+let ALL = [], ITEMS = []; let SV = {version:-1, cards:{}}; let HIDE = null; let SHOWDONE = false;
+function view(){ITEMS = SHOWDONE ? ALL : ALL.filter(it=>!HIDE.has(it.note)); if(cur>=ITEMS.length) cur=Math.max(0,ITEMS.length-1);}
+function sstat(n){return (SV.cards[String(n)]||{}).status||''}
+const KEY='paper-review-cards-v1';
+let D={}; try{D=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+let cur=0; try{cur=+(localStorage.getItem(KEY+'-cur')||0)}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D));localStorage.setItem(KEY+'-cur',cur)}catch(e){} window.__decisions=decisions();}
+function decisions(){return ITEMS.map(it=>({note:it.note,section:it.section,decision:(D[it.note]||{}).d||null,instruction:(D[it.note]||{}).t||'',edits:((D[it.note]||{}).d==='edit')?it.changes.map((c,k)=>({line:c.line,text:((D[it.note]||{}).e||[])[k]??c.new})):null}))}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function toks(s){return s.match(/\s+|[^\s]+/g)||[]}
+function wdiff(a,b){const x=toks(a),y=toks(b),n=x.length,m=y.length;const L=Array.from({length:n+1},()=>new Uint16Array(m+1));
+for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=x[i]===y[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+let i=0,j=0,o='',nn='';while(i<n&&j<m){if(x[i]===y[j]){o+=esc(x[i]);nn+=esc(y[j]);i++;j++}else if(L[i+1][j]>=L[i][j+1]){o+='<del>'+esc(x[i++])+'</del>'}else{nn+='<ins>'+esc(y[j++])+'</ins>'}}
+while(i<n)o+='<del>'+esc(x[i++])+'</del>';while(j<m)nn+='<ins>'+esc(y[j++])+'</ins>';return [o,nn]}
+let MORE=false;
+function cx(lines,dir){const n=MORE?12:3;let L=dir<0?lines.slice(-n):lines.slice(0,n);const mi=lines.indexOf('@@NOTE@@');if(mi>=0&&!L.includes('@@NOTE@@')){L=dir<0?lines.slice(mi):lines.slice(0,mi+1)}if(!L.length)return '';const s=L.map(x=>x==='@@NOTE@@'?'<span class="mark">&#9654; The comment was here</span>':esc(x)).join('\n');return dir<0?`<div class="ctx">${s}</div>`:`<div class="ctx">${s}</div>`}
+let Q=[];
+function fmt(t){if(!t)return '';const d=new Date(t*1000);return d.toLocaleString([], {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+function thread(it){const ev=[];
+Q.filter(e=>e.note===it.note).forEach(e=>ev.push({ts:e.ts||0,k:e.decision==='change'?'you':'sys',
+ t:e.decision==='change'?(e.instruction||'(empty message)'):({accept:'Accepted',reject:'Rejected (reverted)',edit:'Sent my own edit'})[e.decision]||e.decision}));
+(it.replies||[]).forEach(r=>ev.push({ts:r.ts||0,k:'claude',t:r.text}));
+if(!ev.some(e=>e.k!=='sys'))return '';
+ev.sort((a,b)=>a.ts-b.ts);
+return `<div class="thread"><b>Conversation with Claude</b>${ev.map(e=>e.k==='sys'?`<div class="msg sys">${esc(e.t)} · ${fmt(e.ts)}</div>`:
+ `<div class="msg ${e.k}"><span class="who">${e.k==='you'?'You':'Claude'} · ${fmt(e.ts)}</span>${esc(e.t)}</div>`).join('')}</div>`}
+function render(){const it=ITEMS[cur],st=D[it.note]||{};
+let h=`<div class="card"><div class="meta"><b style="color:var(--ink)">${cur+1} / ${ITEMS.length}</b><span>${esc(it.section)}</span><span>note at line ${it.note}</span>${it.partial?'<span class="badge">partial: note kept live</span>':''}${sstat(it.note)?`<span class="sbadge sb-${sstat(it.note)}">${({pending:'with Claude',done:'done',review:'revised by Claude: check again',skip:'skipped for now'})[sstat(it.note)]}</span>`:''}</div>
+<div class="note"><b>COMMENT</b>${esc(it.comment)}</div>${thread(it)}`;
+it.changes.forEach((c,k)=>{const [o,n]=wdiff(c.old,c.new);
+h+=`<div class="chg"><div class="h">Change ${k+1} of ${it.changes.length} · original line ${c.line}</div>${c.near?'':`<div class="far">&#9654; The comment for this card is elsewhere: original line ${it.note}${it.note_new?', now line '+it.note_new:''}. This change is a related edit in another place.</div>`}<div class="side">
+<div><span class="lab">Original</span>${cx(c.old_before,-1)}${o||'<span class="empty">(nothing: new text added)</span>'}${c.mark_in_change?'<span class="mark">&#9654; The comment was here</span>':''}${cx(c.old_after,1)}</div>
+<div><span class="lab">Modified</span>${cx(c.new_before,-1)}${n||'<span class="empty">(removed)</span>'}${c.mark_in_change?'<span class="mark">&#9654; The comment was here</span>':''}${cx(c.new_after,1)}</div></div>
+${st.d==='edit'?`<div class="edlab">Your version of this change (replaces the modified text)</div><textarea class="edit" data-k="${k}">${esc(((st.e||[])[k]??c.new))}</textarea>`:''}
+<button class="more">${MORE?'Less context':'More context'}</button></div>`});
+h+=`<div class="actions"><button class="a ${st.d==='accept'?'on':''}" data-d="accept">Accept</button>
+<button class="r ${st.d==='reject'?'on':''}" data-d="reject">Reject (revert)</button>
+<button class="e ${st.d==='edit'?'on':''}" data-d="edit">Edit myself</button>
+<button class="c ${st.d==='change'?'on':''}" data-d="change">Ask Claude…</button></div>
+<textarea id="t" placeholder="What should Claude do instead?" ${st.d==='change'?'':'style="display:none"'}>${esc(st.t||'')}</textarea>
+<div class="actions" style="margin-top:12px"><button class="done" id="done" ${st.d?'':'disabled'}>Done &rarr; send to Claude</button></div></div>`;
+document.getElementById('card').innerHTML=h;
+document.querySelectorAll('.actions button').forEach(b=>b.onclick=()=>setD(b.dataset.d));
+document.querySelectorAll('.edit').forEach(x=>x.oninput=()=>{const e=(D[it.note].e||it.changes.map(c=>c.new));e[+x.dataset.k]=x.value;D[it.note].e=e;save();});
+document.querySelectorAll('.more').forEach(x=>x.onclick=()=>{MORE=!MORE;render()});
+document.getElementById('done').onclick=()=>sendDone(it);
+const t=document.getElementById('t');t.oninput=()=>{D[it.note]=Object.assign(D[it.note]||{},{t:t.value});save();};
+dots();save();}
+function setD(d){const it=ITEMS[cur];D[it.note]=Object.assign(D[it.note]||{},{d});save();render();
+if(d==='edit'){const x=document.querySelector('.edit');if(x)x.focus()}else if(d==='change'){document.getElementById('t').focus()}}
+function go(k){cur=k;MORE=false;render();window.scrollTo(0,0)}
+function dots(){const n=ITEMS.filter(it=>sstat(it.note)==='done').length,p=ITEMS.filter(it=>sstat(it.note)==='pending').length,r=ITEMS.filter(it=>sstat(it.note)==='review').length,sk=ITEMS.filter(it=>sstat(it.note)==='skip').length;document.getElementById('count').textContent=`${n} of ${ITEMS.length} done · ${p} with Claude · ${r} to re-check${sk?` · ${sk} skipped`:''}`;
+document.getElementById('prog').style.width=(100*n/Math.max(1,ITEMS.length))+'%';
+document.getElementById('dots').innerHTML=ITEMS.map((it,k)=>`<div class="dot ${k===cur?'cur':''} ${sstat(it.note)?'s-'+sstat(it.note):((D[it.note]||{}).d?'loc st-'+D[it.note].d:'')}" data-k="${k}" title="${esc(it.section)}">${k+1}</div>`).join('');
+document.querySelectorAll('.dot').forEach(x=>x.onclick=()=>{cur=+x.dataset.k;render();window.scrollTo(0,0)})}
+document.getElementById('prev').onclick=()=>{if(cur>0){cur--;render();window.scrollTo(0,0)}};
+document.getElementById('next').onclick=()=>{if(cur<ITEMS.length-1){cur++;render();window.scrollTo(0,0)}};
+document.getElementById('exp').onclick=()=>{const s=JSON.stringify(decisions(),null,1),o=document.getElementById('out');o.style.display='block';o.value=s;o.select();
+try{navigator.clipboard.writeText(s)}catch(e){};document.getElementById('exp').textContent='Copied (also shown below)'};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA')return;
+if(e.key==='ArrowRight')document.getElementById('next').click();else if(e.key==='ArrowLeft')document.getElementById('prev').click();});
+async function sendDone(it){const st=D[it.note]||{};if(!st.d)return;
+const body={note:it.note,rev:it.rev||0,decision:st.d,instruction:st.d==='change'?(st.t||''):'',
+ edits:st.d==='edit'?it.changes.map((c,k)=>({line:c.line,text:(st.e||[])[k]??c.new})):null};
+const b=document.getElementById('done');b.disabled=true;b.textContent='Sending…';
+try{await fetch('/api/done',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+SV.cards[String(it.note)]={status:'pending'};D[it.note].sent=it.rev||0;save();
+const nx=ITEMS.findIndex((x,k)=>k>cur&&!['pending','done'].includes(sstat(x.note)));go(nx>=0?nx:cur);}
+catch(e){b.disabled=false;b.textContent='Failed: retry';}}
+async function poll(){try{const s=await (await fetch('/api/state',{cache:'no-store'})).json();
+if(s.version!==SV.version){try{Q=await (await fetch('/api/queue',{cache:'no-store'})).json()}catch(e){}
+const itemsChanged=(s.items_version||0)!==(SV.items_version||0)||!ITEMS.length;SV=s;
+if(itemsChanged){ALL=await (await fetch('/api/items',{cache:'no-store'})).json();
+if(HIDE===null){HIDE=new Set(ALL.filter(it=>(s.cards[String(it.note)]||{}).status==='done').map(it=>it.note));cur=0;}
+view();
+ALL.forEach(it=>{const st=D[it.note];if(st&&(st.rev||0)!==(it.rev||0)){D[it.note]={rev:it.rev||0}}});save();}
+if(cur>=ITEMS.length)cur=0;const ae=document.activeElement;if(ae&&ae.tagName==='TEXTAREA'){dots()}else{render()}}}catch(e){}}
+document.getElementById('showdone').onchange=e=>{const n=(ITEMS[cur]||{}).note;SHOWDONE=e.target.checked;view();const k=ITEMS.findIndex(x=>x.note===n);cur=k>=0?k:0;render();};
+poll();setInterval(poll,2000);
+</script></body></html>
