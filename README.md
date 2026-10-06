@@ -1,72 +1,82 @@
 # paper-review-cards
 
-A small local web app for working through reviewer comments in a LaTeX paper,
-one card at a time, together with Claude (Claude Code).
+Work through the comments in a LaTeX paper one card at a time, together with
+Claude (Claude Code).
 
-Co-authors leave comments in the source with macros such as `\shahaf{...}` or
-`\yarin{...}`. Claude proposes an edit for each comment; the app shows every
-proposal as a card, and you decide: **Accept**, **Reject (revert)**, **Edit
-myself**, or **Ask Claude…** with a free-text instruction. Claude applies the
-decision to the `.tex` file, comments the note out, and the card turns green.
-Questions and answers stay on the card as a conversation.
+Co-authors leave notes in the source with their own macros, such as
+`\alice{...}` or `\todo{...}`. paper-review-cards finds every such macro in the
+preamble, finds every comment in the text, and groups comments that follow each
+other into **threads** (Alice asks, Bob answers, Alice follows up: one card).
+For each card you can ask Claude to act or answer, reply in the paper as
+yourself, resolve the thread, or skip it for now. When Claude proposes an edit,
+the card shows it as a diff to accept, reject or edit.
 
-![A review card](docs/screenshot.png)
+![A thread of three comments as one card](docs/thread.png)
 
-## What a card shows
+![A card after asking Claude: the conversation and Claude's change](docs/conversation.png)
 
-- the comment, in a box at the top;
-- the conversation with Claude on this card (your instructions, Claude's replies, your decisions);
-- every change Claude made for it: original and modified text side by side, with a
-  word diff, inside the surrounding lines of the paper, and a marker where the
-  comment sits ("More context" widens the window);
-- the four choices, then **Done → send to Claude**.
+## How comments are found
 
-Card colours: dashed = chosen but not sent, **yellow** = with Claude,
-**green** = done, **red** = Claude revised it, check again, **grey** = skipped
-for now. Finished cards are hidden on reload ("Show finished" brings them back).
-Left/right arrows move between cards.
+- **Macros:** every one-argument command in the preamble whose body shows its
+  argument as a note, e.g.
+  `\newcommand{\alice}[1]{\ifaddcomments{\textcolor{blue}{[Alice: #1]}}\fi}`
+  (it uses `#1` with `\textcolor`, `\color`, `\marginpar`, `\todo`, ...).
+  The label (`Alice`) and colour (`blue`) are read from the definition.
+  Formatting macros such as `\newcommand{\emphx}[1]{\textbf{#1}}` are not notes.
+- **Comments:** every use of those macros after `\begin{document}`, on its own
+  lines or inline, spanning lines or not, live or commented out with `%`.
+- **Threads:** comments separated only by whitespace and `%` are one thread.
+  A thread with a live comment is open; one whose comments are all commented
+  out is resolved (hidden unless "Show resolved").
+- **Skip:** a skipped card stays out of the way until its thread changes. If
+  anyone adds a comment to it (or edits one), it comes back, marked
+  "skipped, but the thread has a new comment".
 
-## How it works
+The paper is rescanned on every request, so the page follows edits to the
+`.tex` as they happen. `python3 scan.py main.tex` prints the macros and threads.
 
+## On a card
+
+- the thread, each comment with its author and line;
+- the conversation with Claude on this card;
+- the thread in the paper, with a few lines around it;
+- Claude's changes, if any, as an original/modified word diff.
+
+Choices: **Accept** / **Reject (revert)** / **Edit myself** (when Claude has
+proposed changes), **Ask Claude…**, **Reply in the paper…** (adds your own
+`\macro{...}` under the thread; the card then waits for the others' answer),
+**Resolve (comment out)**, and **Skip for now**. **Done → send to Claude**
+sends the choice.
+
+Colours: dashed = chosen, not sent; **yellow** = with Claude; **red** = Claude
+answered, check again (or a skipped thread changed); **grey** = skipped;
+**green** = resolved. Left/right arrows move between cards, and
+`http://localhost:8765/#<card id>` opens a card directly.
+
+## Setup
+
+Add it to the paper's repository as a submodule and start the server from there:
+
+```bash
+git submodule add https://github.com/yarinbnyamin/paper-review-cards
+python3 paper-review-cards/server.py --tex main.tex      # http://localhost:8765/
 ```
-index.html  --POST /api/done-->  server.py  --append-->  queue.jsonl
-     ^                                                     |
-     | polls /api/state, /api/items, /api/queue every 2 s  | wait_queue.py wakes Claude
-     |                                                     v
- items.json / state.json  <--review_lib.py--  Claude applies the decision to main.tex
-```
+
+Decisions and state are kept in `.review-cards/` next to the `.tex`; that
+directory ignores itself in git. Claude handles the decisions: it runs
+`wait_queue.py` in the background, which wakes it when you click Done, and
+applies them with `review_lib.py`. `CLAUDE.md` is its handbook; point Claude to it.
+
+Python 3.8+ only, no dependencies.
+
+## Files
 
 | file | role |
 |---|---|
-| `server.py` | serves the page; `GET /api/items`, `/api/state`, `/api/queue`; `POST /api/done` appends a decision to `queue.jsonl` and marks the card yellow |
-| `index.html` | the whole page (HTML, CSS, JS) |
-| `review_lib.py` | helpers Claude uses to apply decisions: `replace_change`, `comment_out_note`, `uncomment_note`, `reply`, `set_status`, `mark_processed` |
-| `wait_queue.py` | blocks until new decisions arrive (checks every `POLL` seconds, default 60), prints them and exits, which wakes Claude |
-| `build_items.py` | builds the cards from two commits of the paper (before and after Claude's first pass over the comments) |
-
-Invariant: for every change, the card's `new` text is exactly what is in the
-`.tex` file now. `replace_change` keeps it and refuses to edit if the text does
-not occur exactly once.
-
-## Running it
-
-```bash
-python3 server.py 8765          # then open http://localhost:8765/
-POLL=60 python3 wait_queue.py   # run by Claude in the background
-```
-
-The per-paper data (`items.json`, `state.json`, `queue.jsonl`, `processed.txt`,
-`old.tex`) is generated and is not part of the repository.
-
-## Status
-
-Extracted from a single paper's review round, so some paths are still set for
-that paper (`MAIN` in `review_lib.py`, `REPO` in `build_items.py`) and the card
-builder recognises one comment macro. Planned:
-
-- use it as a git submodule inside any paper repository;
-- read the comment macros from the paper's preamble (every
-  `\newcommand{\name}[1]{...}` used for comments) instead of a fixed name;
-- one card per comment thread: consecutive comments (for example reviewer,
-  author, reviewer) form one card, and every comment in the text gets a card;
-- skip a card; a skipped card comes back if someone adds a new comment to its thread.
+| `scan.py` | finds the comment macros, the comments and the threads |
+| `server.py` | serves the page; `/api/items`, `/api/meta`, `/api/state`, `/api/queue`; `POST /api/done`, `/api/skip`, `/api/unskip` |
+| `index.html` | the page |
+| `review_lib.py` | what Claude uses to act on a card: `propose`, `replace_change`, `reject_all`, `comment_out_thread`, `add_comment`, `reply`, `set_status` |
+| `wait_queue.py` | waits for new decisions (checks every `POLL` seconds, default 60) |
+| `examples/demo.tex` | a small paper with every kind of thread |
+| `tests/` | `python3 -m unittest discover -s tests` |
