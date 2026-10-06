@@ -1,9 +1,4 @@
 # per-paper data, generated
-items.json
-state.json
-queue.jsonl
-processed.txt
-old.tex
-backup/
+.review-cards/
 __pycache__/
 .DS_Store

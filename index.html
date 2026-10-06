@@ -3,29 +3,40 @@
 <title>Paper Review Cards</title>
 <style>
 :root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1f;--mute:#6b6b70;--line:#e2e2df;--note:#eef3fb;--noteb:#9db4dc;
---del:#fde2e1;--delink:#a1261d;--ins:#dff3e4;--insink:#1d6b34;--acc:#1f7a3a;--rej:#b3261e;--chg:#a15c00;--btn:#f0f0ee}
+--del:#fde2e1;--delink:#a1261d;--ins:#dff3e4;--insink:#1d6b34;--acc:#1f7a3a;--rej:#b3261e;--chg:#a15c00;--btn:#f0f0ee;--you:#fff3d6;--hl:#fff8e1}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#17181a;--card:#202124;--ink:#ececec;--mute:#a0a0a6;--line:#34353a;--note:#1e2a3d;--noteb:#3d5a8a;
---del:#4a2020;--delink:#ffb4ab;--ins:#1d3b26;--insink:#a6e3b8;--acc:#5fd38a;--rej:#ff8a80;--chg:#ffc266;--btn:#2b2c30}}
+--del:#4a2020;--delink:#ffb4ab;--ins:#1d3b26;--insink:#a6e3b8;--acc:#5fd38a;--rej:#ff8a80;--chg:#ffc266;--btn:#2b2c30;--you:#3d3010;--hl:#2e2a1c}}
 :root[data-theme="dark"]{--bg:#17181a;--card:#202124;--ink:#ececec;--mute:#a0a0a6;--line:#34353a;--note:#1e2a3d;--noteb:#3d5a8a;
---del:#4a2020;--delink:#ffb4ab;--ins:#1d3b26;--insink:#a6e3b8;--acc:#5fd38a;--rej:#ff8a80;--chg:#ffc266;--btn:#2b2c30}
+--del:#4a2020;--delink:#ffb4ab;--ins:#1d3b26;--insink:#a6e3b8;--acc:#5fd38a;--rej:#ff8a80;--chg:#ffc266;--btn:#2b2c30;--you:#3d3010;--hl:#2e2a1c}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;z-index:2}
 header h1{font-size:16px;margin:0 8px 0 0}.pill{font-size:13px;color:var(--mute)}
 .bar{flex:1;min-width:120px;height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--acc)}
 main{max-width:1000px;margin:0 auto;padding:16px}
-.dots{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px}.dot{width:26px;height:22px;border-radius:4px;border:1px solid var(--line);background:var(--card);font-size:11px;color:var(--mute);cursor:pointer;display:grid;place-items:center}
-.dot.st-edit{background:#dfe8fb;color:#2c55a8}
-.dot.loc{border-style:dashed;border-color:var(--ink)}
-.dot.s-pending{background:#f5c518;color:#3d2f00;border-color:#f5c518}.dot.s-done{background:#1f7a3a;color:#fff;border-color:#1f7a3a}.dot.s-review{background:#c62828;color:#fff;border-color:#c62828}.dot.s-skip{background:#8a8a8f;color:#fff;border-color:#8a8a8f}
-button.done{background:#f5c518;border-color:#c9a000;color:#3d2f00;font-weight:600}button.done:disabled{opacity:.4;cursor:not-allowed}
-.sbadge{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:600}.sb-pending{background:#f5c518;color:#3d2f00}.sb-done{background:#1f7a3a;color:#fff}.sb-skip{background:#8a8a8f;color:#fff}.sb-review{background:#c62828;color:#fff}
-.dot.cur{outline:2px solid var(--ink)}.dot.st-accept{background:var(--ins);color:var(--insink)}.dot.st-reject{background:var(--del);color:var(--delink)}.dot.st-change{background:#fff3d6;color:#7a4a00}
-@media (prefers-color-scheme: dark){.dot.st-change{background:#3d3010;color:var(--chg)}}
+.dots{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 14px}
+.dot{width:26px;height:22px;border-radius:4px;border:1px solid var(--line);background:var(--card);font-size:11px;color:var(--mute);cursor:pointer;display:grid;place-items:center}
+.dot.cur{outline:2px solid var(--ink)}.dot.loc{border-style:dashed;border-color:var(--ink)}
+.dot.s-pending{background:#f5c518;color:#3d2f00;border-color:#f5c518}.dot.s-done{background:#1f7a3a;color:#fff;border-color:#1f7a3a}
+.dot.s-review,.dot.s-reopened{background:#c62828;color:#fff;border-color:#c62828}.dot.s-skip{background:#8a8a8f;color:#fff;border-color:#8a8a8f}
+.sbadge{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:600}.sb-pending{background:#f5c518;color:#3d2f00}.sb-done{background:#1f7a3a;color:#fff}
+.sb-skip{background:#8a8a8f;color:#fff}.sb-review,.sb-reopened{background:#c62828;color:#fff}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
 .meta{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;color:var(--mute);font-size:13px;margin-bottom:10px}
-.badge{font-size:11px;padding:2px 6px;border-radius:4px;background:#fff3d6;color:#7a4a00}
-.note{background:var(--note);border-left:3px solid var(--noteb);padding:10px 12px;border-radius:6px;margin:0 0 14px;white-space:pre-wrap}
-.note b{display:block;font-size:12px;color:var(--mute);margin-bottom:4px;font-weight:600}
+.box{border:1px solid var(--line);border-radius:8px;margin:0 0 14px;padding:10px 12px}
+.box>b{display:block;font-size:12px;color:var(--mute);font-weight:600;margin-bottom:6px}
+.cm{border-left:3px solid var(--noteb);background:var(--note);border-radius:6px;padding:8px 10px;margin:0 0 8px;white-space:pre-wrap;word-break:break-word}
+.cm:last-child{margin-bottom:0}
+.cm .who{display:flex;gap:8px;align-items:baseline;font:600 11px -apple-system,sans-serif;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.cm .who span{color:var(--mute);font-weight:500;text-transform:none;letter-spacing:0}
+.cm.off{opacity:.6}
+.dotc{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--noteb);align-self:center}
+.src{font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;margin:0}
+.src .ctx{color:var(--mute)}.src .th{background:var(--hl);display:block}
+.msgs{display:flex;flex-direction:column;gap:8px}
+.msg{padding:8px 10px;border-radius:8px;white-space:pre-wrap;max-width:92%}
+.msg .who{display:block;font:600 11px -apple-system,sans-serif;color:var(--mute);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.msg.you{align-self:flex-end;background:var(--you)}.msg.claude{align-self:flex-start;background:var(--note)}
+.msg.sys{align-self:flex-end;background:transparent;color:var(--mute);font-size:12px;padding:0 4px}
 .chg{border:1px solid var(--line);border-radius:8px;margin:0 0 12px;overflow:hidden}
 .chg .h{font-size:12px;color:var(--mute);padding:6px 10px;border-bottom:1px solid var(--line)}
 .side{display:grid;grid-template-columns:1fr 1fr}@media(max-width:760px){.side{grid-template-columns:1fr}}
@@ -34,112 +45,116 @@ button.done{background:#f5c518;border-color:#c9a000;color:#3d2f00;font-weight:60
 .lab{display:block;font:600 11px -apple-system,sans-serif;color:var(--mute);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
 del{background:var(--del);color:var(--delink);text-decoration:line-through}ins{background:var(--ins);color:var(--insink);text-decoration:none}
 .empty{color:var(--mute);font-style:italic}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--btn);color:var(--ink);cursor:pointer}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;align-items:center}
+button,select{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--btn);color:var(--ink);cursor:pointer}
+select{padding:7px 8px}
 button.a{border-color:var(--acc);color:var(--acc)}button.r{border-color:var(--rej);color:var(--rej)}button.c{border-color:var(--chg);color:var(--chg)}
+button.e{border-color:#3f6fd1;color:#3f6fd1}button.p{border-color:#7b4fc9;color:#7b4fc9}button.v{border-color:var(--mute);color:var(--mute)}
 button.on.a{background:var(--acc);color:#fff}button.on.r{background:var(--rej);color:#fff}button.on.c{background:var(--chg);color:#fff}
+button.on.e{background:#3f6fd1;color:#fff}button.on.p{background:#7b4fc9;color:#fff}button.on.v{background:var(--mute);color:#fff}
+button.done{background:#f5c518;border-color:#c9a000;color:#3d2f00;font-weight:600}button.done:disabled{opacity:.4;cursor:not-allowed}
+button.skip{margin-left:auto}
 textarea{width:100%;min-height:80px;margin-top:10px;font:13px/1.5 ui-monospace,Menlo,monospace;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
-.nav{display:flex;justify-content:space-between;margin-top:14px}.kbd{font-size:12px;color:var(--mute)}
-#out{display:none}
-.ctx{color:var(--mute);opacity:.75}
-.mark{display:block;margin:4px 0;padding:3px 8px;border-radius:4px;background:var(--note);border-left:3px solid var(--noteb);color:var(--ink);font:600 12px -apple-system,sans-serif;opacity:1}
-.far{font-size:12px;color:var(--mute);padding:6px 12px;border-bottom:1px solid var(--line);background:var(--note)}
-.more{font-size:12px;padding:4px 10px;margin:6px 12px 10px}
-button.e{border-color:#3f6fd1;color:#3f6fd1}button.on.e{background:#3f6fd1;color:#fff}
 .edit{display:block;width:100%;min-height:90px;margin:0;border:0;border-top:1px dashed var(--line);border-radius:0;background:var(--bg)}
-.edlab{font:600 11px -apple-system,sans-serif;color:#3f6fd1;padding:8px 12px 0;text-transform:uppercase;letter-spacing:.04em}
-.thread{border:1px solid var(--line);border-radius:8px;margin:0 0 14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
-.thread>b{font-size:12px;color:var(--mute);font-weight:600}
-.msg{padding:8px 10px;border-radius:8px;white-space:pre-wrap;max-width:92%}
-.msg .who{display:block;font:600 11px -apple-system,sans-serif;color:var(--mute);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
-.msg.you{align-self:flex-end;background:#fff3d6}.msg.claude{align-self:flex-start;background:var(--note)}
-.msg.sys{align-self:flex-end;background:transparent;color:var(--mute);font-size:12px;padding:0 4px}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .msg.you{background:#3d3010}}
-:root[data-theme="dark"] .msg.you{background:#3d3010}
+.hint{font-size:12px;color:var(--mute);margin-top:6px}
+.nav{display:flex;justify-content:space-between;margin-top:14px}.kbd{font-size:12px;color:var(--mute)}
+.none{color:var(--mute);text-align:center;padding:40px 0}
 </style></head><body>
-<header><h1>Paper review cards</h1><span class="pill" id="count"></span><div class="bar"><i id="prog"></i></div>
-<label class="pill"><input type="checkbox" id="showdone"> Show finished</label><button id="exp">Copy decisions</button></header>
+<header><h1>Paper review cards</h1><span class="pill" id="file"></span><span class="pill" id="count"></span><div class="bar"><i id="prog"></i></div>
+<label class="pill"><input type="checkbox" id="showdone"> Show resolved</label></header>
 <main><div class="dots" id="dots"></div><div id="card"></div>
-<div class="nav"><button id="prev">&larr; Previous</button><span class="kbd">&larr; &rarr; move between cards</span><button id="next">Next &rarr;</button></div>
-<textarea id="out" readonly></textarea></main>
+<div class="nav"><button id="prev">&larr; Previous</button><span class="kbd">&larr; &rarr; move between cards</span><button id="next">Next &rarr;</button></div></main>
 <script>
-let ALL = [], ITEMS = []; let SV = {version:-1, cards:{}}; let HIDE = null; let SHOWDONE = false;
-function view(){ITEMS = SHOWDONE ? ALL : ALL.filter(it=>!HIDE.has(it.note)); if(cur>=ITEMS.length) cur=Math.max(0,ITEMS.length-1);}
-function sstat(n){return (SV.cards[String(n)]||{}).status||''}
-const KEY='paper-review-cards-v1';
-let D={}; try{D=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
-let cur=0; try{cur=+(localStorage.getItem(KEY+'-cur')||0)}catch(e){}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(D));localStorage.setItem(KEY+'-cur',cur)}catch(e){} window.__decisions=decisions();}
-function decisions(){return ITEMS.map(it=>({note:it.note,section:it.section,decision:(D[it.note]||{}).d||null,instruction:(D[it.note]||{}).t||'',edits:((D[it.note]||{}).d==='edit')?it.changes.map((c,k)=>({line:c.line,text:((D[it.note]||{}).e||[])[k]??c.new})):null}))}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+const KEY='paper-review-cards-v2';
+let ALL=[],ITEMS=[],Q=[],META={macros:{}},SV=null,SHOWDONE=false,curId=null;
+let D={};try{D=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+let ME='';try{ME=localStorage.getItem(KEY+'-me')||''}catch(e){}
+try{curId=localStorage.getItem(KEY+'-cur')}catch(e){}
+if(location.hash.length>1)curId=decodeURIComponent(location.hash.slice(1));   // #<card id> opens that card
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D));localStorage.setItem(KEY+'-me',ME);if(curId)localStorage.setItem(KEY+'-cur',curId)}catch(e){}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fmt(t){if(!t)return '';return new Date(t*1000).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
 function toks(s){return s.match(/\s+|[^\s]+/g)||[]}
 function wdiff(a,b){const x=toks(a),y=toks(b),n=x.length,m=y.length;const L=Array.from({length:n+1},()=>new Uint16Array(m+1));
 for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=x[i]===y[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
 let i=0,j=0,o='',nn='';while(i<n&&j<m){if(x[i]===y[j]){o+=esc(x[i]);nn+=esc(y[j]);i++;j++}else if(L[i+1][j]>=L[i][j+1]){o+='<del>'+esc(x[i++])+'</del>'}else{nn+='<ins>'+esc(y[j++])+'</ins>'}}
 while(i<n)o+='<del>'+esc(x[i++])+'</del>';while(j<m)nn+='<ins>'+esc(y[j++])+'</ins>';return [o,nn]}
-let MORE=false;
-function cx(lines,dir){const n=MORE?12:3;let L=dir<0?lines.slice(-n):lines.slice(0,n);const mi=lines.indexOf('@@NOTE@@');if(mi>=0&&!L.includes('@@NOTE@@')){L=dir<0?lines.slice(mi):lines.slice(0,mi+1)}if(!L.length)return '';const s=L.map(x=>x==='@@NOTE@@'?'<span class="mark">&#9654; The comment was here</span>':esc(x)).join('\n');return dir<0?`<div class="ctx">${s}</div>`:`<div class="ctx">${s}</div>`}
-let Q=[];
-function fmt(t){if(!t)return '';const d=new Date(t*1000);return d.toLocaleString([], {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
-function thread(it){const ev=[];
-Q.filter(e=>e.note===it.note).forEach(e=>ev.push({ts:e.ts||0,k:e.decision==='change'?'you':'sys',
- t:e.decision==='change'?(e.instruction||'(empty message)'):({accept:'Accepted',reject:'Rejected (reverted)',edit:'Sent my own edit'})[e.decision]||e.decision}));
-(it.replies||[]).forEach(r=>ev.push({ts:r.ts||0,k:'claude',t:r.text}));
-if(!ev.some(e=>e.k!=='sys'))return '';
-ev.sort((a,b)=>a.ts-b.ts);
-return `<div class="thread"><b>Conversation with Claude</b>${ev.map(e=>e.k==='sys'?`<div class="msg sys">${esc(e.t)} · ${fmt(e.ts)}</div>`:
- `<div class="msg ${e.k}"><span class="who">${e.k==='you'?'You':'Claude'} · ${fmt(e.ts)}</span>${esc(e.t)}</div>`).join('')}</div>`}
-function render(){const it=ITEMS[cur],st=D[it.note]||{};
-let h=`<div class="card"><div class="meta"><b style="color:var(--ink)">${cur+1} / ${ITEMS.length}</b><span>${esc(it.section)}</span><span>note at line ${it.note}</span>${it.partial?'<span class="badge">partial: note kept live</span>':''}${sstat(it.note)?`<span class="sbadge sb-${sstat(it.note)}">${({pending:'with Claude',done:'done',review:'revised by Claude: check again',skip:'skipped for now'})[sstat(it.note)]}</span>`:''}</div>
-<div class="note"><b>COMMENT</b>${esc(it.comment)}</div>${thread(it)}`;
-it.changes.forEach((c,k)=>{const [o,n]=wdiff(c.old,c.new);
-h+=`<div class="chg"><div class="h">Change ${k+1} of ${it.changes.length} · original line ${c.line}</div>${c.near?'':`<div class="far">&#9654; The comment for this card is elsewhere: original line ${it.note}${it.note_new?', now line '+it.note_new:''}. This change is a related edit in another place.</div>`}<div class="side">
-<div><span class="lab">Original</span>${cx(c.old_before,-1)}${o||'<span class="empty">(nothing: new text added)</span>'}${c.mark_in_change?'<span class="mark">&#9654; The comment was here</span>':''}${cx(c.old_after,1)}</div>
-<div><span class="lab">Modified</span>${cx(c.new_before,-1)}${n||'<span class="empty">(removed)</span>'}${c.mark_in_change?'<span class="mark">&#9654; The comment was here</span>':''}${cx(c.new_after,1)}</div></div>
-${st.d==='edit'?`<div class="edlab">Your version of this change (replaces the modified text)</div><textarea class="edit" data-k="${k}">${esc(((st.e||[])[k]??c.new))}</textarea>`:''}
-<button class="more">${MORE?'Less context':'More context'}</button></div>`});
-h+=`<div class="actions"><button class="a ${st.d==='accept'?'on':''}" data-d="accept">Accept</button>
-<button class="r ${st.d==='reject'?'on':''}" data-d="reject">Reject (revert)</button>
-<button class="e ${st.d==='edit'?'on':''}" data-d="edit">Edit myself</button>
-<button class="c ${st.d==='change'?'on':''}" data-d="change">Ask Claude…</button></div>
-<textarea id="t" placeholder="What should Claude do instead?" ${st.d==='change'?'':'style="display:none"'}>${esc(st.t||'')}</textarea>
-<div class="actions" style="margin-top:12px"><button class="done" id="done" ${st.d?'':'disabled'}>Done &rarr; send to Claude</button></div></div>`;
-document.getElementById('card').innerHTML=h;
-document.querySelectorAll('.actions button').forEach(b=>b.onclick=()=>setD(b.dataset.d));
-document.querySelectorAll('.edit').forEach(x=>x.oninput=()=>{const e=(D[it.note].e||it.changes.map(c=>c.new));e[+x.dataset.k]=x.value;D[it.note].e=e;save();});
-document.querySelectorAll('.more').forEach(x=>x.onclick=()=>{MORE=!MORE;render()});
-document.getElementById('done').onclick=()=>sendDone(it);
-const t=document.getElementById('t');t.oninput=()=>{D[it.note]=Object.assign(D[it.note]||{},{t:t.value});save();};
-dots();save();}
-function setD(d){const it=ITEMS[cur];D[it.note]=Object.assign(D[it.note]||{},{d});save();render();
-if(d==='edit'){const x=document.querySelector('.edit');if(x)x.focus()}else if(d==='change'){document.getElementById('t').focus()}}
-function go(k){cur=k;MORE=false;render();window.scrollTo(0,0)}
-function dots(){const n=ITEMS.filter(it=>sstat(it.note)==='done').length,p=ITEMS.filter(it=>sstat(it.note)==='pending').length,r=ITEMS.filter(it=>sstat(it.note)==='review').length,sk=ITEMS.filter(it=>sstat(it.note)==='skip').length;document.getElementById('count').textContent=`${n} of ${ITEMS.length} done · ${p} with Claude · ${r} to re-check${sk?` · ${sk} skipped`:''}`;
-document.getElementById('prog').style.width=(100*n/Math.max(1,ITEMS.length))+'%';
-document.getElementById('dots').innerHTML=ITEMS.map((it,k)=>`<div class="dot ${k===cur?'cur':''} ${sstat(it.note)?'s-'+sstat(it.note):((D[it.note]||{}).d?'loc st-'+D[it.note].d:'')}" data-k="${k}" title="${esc(it.section)}">${k+1}</div>`).join('');
-document.querySelectorAll('.dot').forEach(x=>x.onclick=()=>{cur=+x.dataset.k;render();window.scrollTo(0,0)})}
-document.getElementById('prev').onclick=()=>{if(cur>0){cur--;render();window.scrollTo(0,0)}};
-document.getElementById('next').onclick=()=>{if(cur<ITEMS.length-1){cur++;render();window.scrollTo(0,0)}};
-document.getElementById('exp').onclick=()=>{const s=JSON.stringify(decisions(),null,1),o=document.getElementById('out');o.style.display='block';o.value=s;o.select();
-try{navigator.clipboard.writeText(s)}catch(e){};document.getElementById('exp').textContent='Copied (also shown below)'};
-document.addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA')return;
-if(e.key==='ArrowRight')document.getElementById('next').click();else if(e.key==='ArrowLeft')document.getElementById('prev').click();});
-async function sendDone(it){const st=D[it.note]||{};if(!st.d)return;
-const body={note:it.note,rev:it.rev||0,decision:st.d,instruction:st.d==='change'?(st.t||''):'',
- edits:st.d==='edit'?it.changes.map((c,k)=>({line:c.line,text:(st.e||[])[k]??c.new})):null};
-const b=document.getElementById('done');b.disabled=true;b.textContent='Sending…';
-try{await fetch('/api/done',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-SV.cards[String(it.note)]={status:'pending'};D[it.note].sent=it.rev||0;save();
-const nx=ITEMS.findIndex((x,k)=>k>cur&&!['pending','done'].includes(sstat(x.note)));go(nx>=0?nx:cur);}
-catch(e){b.disabled=false;b.textContent='Failed: retry';}}
+const LABEL={pending:'with Claude',done:'resolved',review:'Claude answered: check again',skip:'skipped',reopened:'skipped, but the thread has a new comment'};
+function who(m){return (META.macros[m]||{}).label||m}
+function colour(m){return (META.macros[m]||{}).color||''}
+function view(){ITEMS=SHOWDONE?ALL:ALL.filter(it=>it.status!=='done');}
+function cur(){let k=ITEMS.findIndex(it=>it.id===curId);if(k<0){k=0;curId=ITEMS[0]&&ITEMS[0].id}return k}
+function draft(it){const d=D[it.id];if(d&&(d.rev||0)!==(it.rev||0)){delete D[it.id]}return D[it.id]||(D[it.id]={rev:it.rev||0})}
+
+function thread(it){return `<div class="box"><b>Comment thread · ${it.comments.length} comment${it.comments.length>1?'s':''}</b>${it.comments.map(c=>
+ `<div class="cm ${c.live?'':'off'}" style="${colour(c.macro)?'border-left-color:'+esc(colour(c.macro)):''}"><div class="who"><i class="dotc" style="${colour(c.macro)?'background:'+esc(colour(c.macro)):''}"></i>${esc(who(c.macro))}<span>\\${esc(c.macro)} · line ${c.line}${c.live?'':' · commented out'}</span></div>${esc(c.text.trim())}</div>`).join('')}</div>`}
+
+function source(it){const n0=it.line-it.before.length;let h='';
+ it.before.forEach(l=>h+=`<span class="ctx">${esc(l)}</span>\n`);
+ h+=`<span class="th">${it.lines.map(esc).join('\n')}</span>`;
+ it.after.forEach(l=>h+=`<span class="ctx">${esc(l)}</span>\n`);
+ return `<div class="box"><b>In the paper · lines ${n0}–${it.end_line+it.after.length}</b><pre class="src">${h}</pre></div>`}
+
+function convo(it){const ev=[];
+ Q.filter(e=>e.id===it.id).forEach(e=>{const t={change:e.instruction||'(empty message)',reply:`Reply as ${who(e.macro||'')}: ${e.text||''}`,
+  accept:'Accepted the changes',reject:'Rejected the changes (revert)',edit:'Sent my own edit',resolve:'Resolve: comment the thread out'}[e.decision]||e.decision;
+  ev.push({ts:e.ts||0,k:(e.decision==='change'||e.decision==='reply')?'you':'sys',t})});
+ (it.replies||[]).forEach(r=>ev.push({ts:r.ts||0,k:'claude',t:r.text}));
+ if(!ev.length)return '';ev.sort((a,b)=>a.ts-b.ts);
+ return `<div class="box"><b>Conversation with Claude</b><div class="msgs">${ev.map(e=>e.k==='sys'?`<div class="msg sys">${esc(e.t)} · ${fmt(e.ts)}</div>`:
+  `<div class="msg ${e.k}"><span class="who">${e.k==='you'?'You':'Claude'} · ${fmt(e.ts)}</span>${esc(e.t)}</div>`).join('')}</div></div>`}
+
+function changes(it,d){if(!it.changes.length)return '';return it.changes.map((c,k)=>{const [o,n]=wdiff(c.old,c.new);
+ return `<div class="chg"><div class="h">Claude's change ${k+1} of ${it.changes.length}</div><div class="side">
+ <div><span class="lab">Original</span>${o||'<span class="empty">(nothing: new text)</span>'}</div>
+ <div><span class="lab">Modified</span>${n||'<span class="empty">(removed)</span>'}</div></div>
+ ${d.d==='edit'?`<textarea class="edit" data-k="${k}">${esc((d.e||[])[k]??c.new)}</textarea>`:''}</div>`}).join('')}
+
+function render(){view();const box=document.getElementById('card');
+ if(!ITEMS.length){box.innerHTML=`<div class="card none">No open comment threads.${ALL.length?' Tick "Show resolved" to see the others.':''}</div>`;dots();return}
+ const k=cur(),it=ITEMS[k],d=draft(it),hasC=it.changes.length>0;
+ const opts=Object.keys(META.macros).map(m=>`<option value="${esc(m)}" ${m===ME?'selected':''}>${esc(who(m))} (\\${esc(m)})</option>`).join('');
+ let h=`<div class="card"><div class="meta"><b style="color:var(--ink)">${k+1} / ${ITEMS.length}</b><span>${esc(it.section||'(before the first section)')}</span><span>line ${it.line}</span>${it.status?`<span class="sbadge sb-${it.status}">${LABEL[it.status]}</span>`:''}</div>`;
+ h+=thread(it)+convo(it)+source(it)+changes(it,d);
+ h+=`<div class="actions">${hasC?`<button class="a ${d.d==='accept'?'on':''}" data-d="accept">Accept</button><button class="r ${d.d==='reject'?'on':''}" data-d="reject">Reject (revert)</button><button class="e ${d.d==='edit'?'on':''}" data-d="edit">Edit myself</button>`:''}
+ <button class="c ${d.d==='change'?'on':''}" data-d="change">Ask Claude…</button>
+ <button class="p ${d.d==='reply'?'on':''}" data-d="reply">Reply in the paper…</button>
+ <button class="v ${d.d==='resolve'?'on':''}" data-d="resolve">Resolve (comment out)</button>
+ ${it.status==='skip'||it.status==='reopened'?`<button class="skip" id="unskip">Unskip</button>`:`<button class="skip" id="skip">Skip for now</button>`}</div>
+ ${d.d==='change'?`<textarea id="t" placeholder="What should Claude do or answer?">${esc(d.t||'')}</textarea>`:''}
+ ${d.d==='reply'?`<div class="actions" style="margin-top:10px"><select id="mac">${opts}</select><span class="hint">adds \\macro{…} under the thread, as your own comment</span></div><textarea id="t" placeholder="Your reply">${esc(d.t||'')}</textarea>`:''}
+ ${d.d==='resolve'?`<div class="hint">Claude comments out every live comment of this thread; the paper text is not changed.</div>`:''}
+ <div class="actions" style="margin-top:12px"><button class="done" id="done" ${d.d?'':'disabled'}>Done &rarr; send to Claude</button></div></div>`;
+ box.innerHTML=h;
+ box.querySelectorAll('.actions button[data-d]').forEach(b=>b.onclick=()=>{d.d=b.dataset.d;save();render();const t=document.getElementById('t');if(t)t.focus()});
+ box.querySelectorAll('.edit').forEach(x=>x.oninput=()=>{d.e=d.e||it.changes.map(c=>c.new);d.e[+x.dataset.k]=x.value;save()});
+ const t=document.getElementById('t');if(t)t.oninput=()=>{d.t=t.value;save()};
+ const mac=document.getElementById('mac');if(mac){if(!ME)ME=mac.value;mac.onchange=()=>{ME=mac.value;save()}}
+ const sk=document.getElementById('skip');if(sk)sk.onclick=()=>post('/api/skip',{id:it.id,sig:it.sig}).then(refresh).then(()=>step(1));
+ const us=document.getElementById('unskip');if(us)us.onclick=()=>post('/api/unskip',{id:it.id}).then(refresh);
+ document.getElementById('done').onclick=()=>send(it,d);
+ dots();save()}
+
+function dots(){const n=ALL.filter(i=>i.status==='done').length,c=s=>ALL.filter(i=>i.status===s).length;
+ document.getElementById('count').textContent=`${n} of ${ALL.length} resolved · ${c('pending')} with Claude · ${c('review')+c('reopened')} to re-check · ${c('skip')} skipped`;
+ document.getElementById('prog').style.width=(100*n/Math.max(1,ALL.length))+'%';
+ const k=ITEMS.findIndex(i=>i.id===curId);
+ document.getElementById('dots').innerHTML=ITEMS.map((it,j)=>`<div class="dot ${j===k?'cur':''} ${it.status?'s-'+it.status:((D[it.id]||{}).d?'loc':'')}" data-k="${j}" title="${esc(it.section)} · line ${it.line}">${j+1}</div>`).join('');
+ document.querySelectorAll('.dot').forEach(x=>x.onclick=()=>{curId=ITEMS[+x.dataset.k].id;render();scrollTo(0,0)})}
+function step(s){const k=cur()+s;if(k>=0&&k<ITEMS.length){curId=ITEMS[k].id;render();scrollTo(0,0)}}
+function post(u,b){return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})}
+async function send(it,d){if(!d.d)return;const b=document.getElementById('done');b.disabled=true;b.textContent='Sending…';
+ const body={id:it.id,sig:it.sig,rev:it.rev||0,line:it.line,decision:d.d,instruction:d.d==='change'?(d.t||''):'',
+  edits:d.d==='edit'?it.changes.map((c,k)=>(d.e||[])[k]??c.new):null,macro:d.d==='reply'?ME:null,text:d.d==='reply'?(d.t||''):null};
+ try{await post('/api/done',body);delete D[it.id];save();
+  const nx=ITEMS.findIndex((x,j)=>j>cur()&&!['pending','done','skip'].includes(x.status));if(nx>=0)curId=ITEMS[nx].id;await refresh()}
+ catch(e){b.disabled=false;b.textContent='Failed: retry'}}
+async function refresh(){try{[ALL,Q]=await Promise.all([fetch('/api/items',{cache:'no-store'}).then(r=>r.json()),fetch('/api/queue',{cache:'no-store'}).then(r=>r.json())])}catch(e){}
+ const a=document.activeElement;if(a&&a.tagName==='TEXTAREA'){view();dots()}else render()}
 async function poll(){try{const s=await (await fetch('/api/state',{cache:'no-store'})).json();
-if(s.version!==SV.version){try{Q=await (await fetch('/api/queue',{cache:'no-store'})).json()}catch(e){}
-const itemsChanged=(s.items_version||0)!==(SV.items_version||0)||!ITEMS.length;SV=s;
-if(itemsChanged){ALL=await (await fetch('/api/items',{cache:'no-store'})).json();
-if(HIDE===null){HIDE=new Set(ALL.filter(it=>(s.cards[String(it.note)]||{}).status==='done').map(it=>it.note));cur=0;}
-view();
-ALL.forEach(it=>{const st=D[it.note];if(st&&(st.rev||0)!==(it.rev||0)){D[it.note]={rev:it.rev||0}}});save();}
-if(cur>=ITEMS.length)cur=0;const ae=document.activeElement;if(ae&&ae.tagName==='TEXTAREA'){dots()}else{render()}}}catch(e){}}
-document.getElementById('showdone').onchange=e=>{const n=(ITEMS[cur]||{}).note;SHOWDONE=e.target.checked;view();const k=ITEMS.findIndex(x=>x.note===n);cur=k>=0?k:0;render();};
-poll();setInterval(poll,2000);
+ if(!SV||s.version!==SV.version||s.tex_mtime!==SV.tex_mtime||s.props_mtime!==SV.props_mtime){SV=s;await refresh()}}catch(e){}}
+document.getElementById('prev').onclick=()=>step(-1);document.getElementById('next').onclick=()=>step(1);
+document.getElementById('showdone').onchange=e=>{SHOWDONE=e.target.checked;render()};
+document.addEventListener('keydown',e=>{if(['TEXTAREA','SELECT','INPUT'].includes(e.target.tagName))return;if(e.key==='ArrowRight')step(1);else if(e.key==='ArrowLeft')step(-1)});
+fetch('/api/meta').then(r=>r.json()).then(m=>{META=m;document.getElementById('file').textContent=m.tex;document.title='Review cards · '+m.tex}).finally(()=>{poll();setInterval(poll,2000)});
 </script></body></html>

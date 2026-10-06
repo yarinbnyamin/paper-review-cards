@@ -1,94 +1,213 @@
-"""Helpers Claude uses to apply review decisions to main.tex (shahaf-review branch).
+"""Helpers Claude uses to act on review cards.
 
-Invariant: for every card, items.json's change["new"] is the text currently in main.tex.
+The cards are the comment threads of the paper (see scan.py); this module is
+how Claude answers them. It finds the data directory from, in order: the
+`data` argument of configure(), $REVIEW_CARDS_DATA, ./.review-cards.
+
+    import review_lib as R
+    R.configure("/path/to/paper/.review-cards")
+    t = R.thread(tid)                      # the card's thread, as the page shows it
+    R.propose(tid, old, new)               # edit the paper and record the edit on the card
+    R.reply(tid, "what I did / the answer") # Claude's message on the card
+    R.set_status(tid, "review")            # red: the user looks again
+
+Invariant: for every recorded change, its `new` text occurs exactly once in the
+paper, so later decisions (accept / reject / edit) can find it. The functions
+here refuse to edit when that does not hold, rather than guess.
 """
-import json, os, re
+import json
+import os
+import time
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-MAIN = "/Users/bnyamin/Projects/overleaf/PlanB-shahaf/main.tex"  # review worktree, branch shahaf-review-wt
-P = lambda f: os.path.join(HERE, f)
+import scan
 
-def items():
-    return json.load(open(P("items.json")))
+DATA = None
 
-def save_items(its, bump=True):
-    json.dump(its, open(P("items.json"), "w"), indent=1)
-    if bump:
-        st = state(); st["items_version"] = st.get("items_version", 0) + 1; st["version"] = st.get("version", 0) + 1
-        json.dump(st, open(P("state.json"), "w"))
+
+def configure(data=None):
+    global DATA
+    DATA = os.path.abspath(data or os.environ.get("REVIEW_CARDS_DATA") or ".review-cards")
+    return DATA
+
+
+def P(f):
+    if DATA is None:
+        configure()
+    return os.path.join(DATA, f)
+
+
+def _load(f, default):
+    try:
+        with open(P(f)) as fh:
+            return json.load(fh)
+    except Exception:
+        return default
+
+
+def _dump(f, obj):
+    tmp = P(f) + ".tmp"
+    with open(tmp, "w") as fh:
+        json.dump(obj, fh, indent=1)
+    os.replace(tmp, P(f))
+
+
+def tex_path():
+    return _load("config.json", {})["tex"]
+
+
+def read_tex():
+    with open(tex_path(), encoding="utf-8") as fh:
+        return fh.read()
+
+
+def write_tex(s):
+    with open(tex_path(), "w", encoding="utf-8") as fh:
+        fh.write(s)
+
+
+# ----- cards -----------------------------------------------------------------
+
+def threads():
+    return scan.threads(read_tex())
+
+
+def thread(tid):
+    for t in threads():
+        if t["id"] == tid:
+            return t
+    raise KeyError(f"no thread {tid!r} in {tex_path()}")
+
+
+def proposals():
+    return _load("proposals.json", {})
+
+
+def _card(props, tid):
+    return props.setdefault(tid, {"rev": 0, "changes": [], "replies": []})
+
 
 def state():
+    return _load("state.json", {"version": 0, "cards": {}})
+
+
+def set_status(tid, status, **extra):
+    st = state()
+    st["cards"][tid] = dict(status=status, **extra)
+    st["version"] = st.get("version", 0) + 1
+    _dump("state.json", st)
+
+
+def reply(tid, text):
+    """Claude's message on the card: kept in its conversation, and the card is revised (rev + 1)."""
+    props = proposals()
+    c = _card(props, tid)
+    c["rev"] += 1
+    c["replies"].append({"ts": time.time(), "rev": c["rev"], "text": text})
+    _dump("proposals.json", props)
+
+
+# ----- the queue ---------------------------------------------------------------
+
+def queue():
     try:
-        return json.load(open(P("state.json")))
-    except Exception:
-        return {"version": 0, "cards": {}}
+        with open(P("queue.jsonl")) as fh:
+            return [json.loads(l) for l in fh if l.strip()]
+    except FileNotFoundError:
+        return []
 
-def set_status(note, status, **extra):
-    st = state(); st["cards"][str(note)] = dict(status=status, **extra); st["version"] = st.get("version", 0) + 1
-    json.dump(st, open(P("state.json"), "w"))
 
-def card(its, note):
-    return next(it for it in its if it["note"] == note)
+def processed():
+    try:
+        with open(P("processed.txt")) as fh:
+            return int(fh.read().strip() or 0)
+    except FileNotFoundError:
+        return 0
 
-def replace_change(c, text):
-    """Make main.tex hold `text` where change c currently holds c['new']."""
-    s = open(MAIN).read()
-    cur = c["new"]
-    if cur:
-        n = s.count(cur)
-        assert n == 1, f"current text occurs {n}x: {cur[:70]!r}"
-        if text == "":   # delete the whole line(s)
-            s = s.replace(cur + "\n", "", 1) if (cur + "\n") in s else s.replace(cur, "", 1)
-        else:
-            s = s.replace(cur, text, 1)
-    else:              # the change had removed text: re-insert after the line before it
-        anchor = c["new_before"][-1]
-        n = s.count(anchor + "\n")
-        assert n == 1, f"anchor occurs {n}x: {anchor[:70]!r}"
-        s = s.replace(anchor + "\n", anchor + "\n" + text + "\n", 1)
-    open(MAIN, "w").write(s)
-    c["new"] = text
 
-def comment_out_note(note_first_line):
-    """Comment out the live \\shahaf{...} block starting with this exact line (no-op if already commented)."""
-    L = open(MAIN).read().split("\n")
-    idx = [i for i, l in enumerate(L) if l == note_first_line]
-    if not idx:
-        return False
-    i = idx[0]; depth = 0
-    while True:
-        depth += L[i].count("{") - L[i].count("}")
-        if not L[i].lstrip().startswith("%"):
-            L[i] = "% " + L[i]
-        if depth <= 0:
-            break
-        i += 1
-    open(MAIN, "w").write("\n".join(L))
-    return True
+def pending():
+    """The decisions not handled yet, in order."""
+    return queue()[processed():]
 
-def uncomment_note(note_first_line):
-    L = open(MAIN).read().split("\n")
-    idx = [i for i, l in enumerate(L) if l == "% " + note_first_line]
-    if not idx:
-        return False
-    i = idx[0]; depth = 0
-    while True:
-        if L[i].startswith("% "):
-            L[i] = L[i][2:]
-        depth += L[i].count("{") - L[i].count("}")
-        if depth <= 0:
-            break
-        i += 1
-    open(MAIN, "w").write("\n".join(L))
-    return True
 
 def mark_processed(n):
-    open(P("processed.txt"), "w").write(str(n))
+    with open(P("processed.txt"), "w") as fh:
+        fh.write(str(n))
 
 
-def reply(it, text):
-    """Claude's answer on a card: bump its rev, show the text, and keep it in the card's conversation."""
-    import time
-    it["rev"] = it.get("rev", 0) + 1
-    it["claude_note"] = text
-    it.setdefault("replies", []).append({"ts": time.time(), "rev": it["rev"], "text": text})
+# ----- edits to the paper --------------------------------------------------------
+
+def _once(s, text):
+    n = s.count(text)
+    if n != 1:
+        raise ValueError(f"text occurs {n} times in the paper, expected once: {text[:70]!r}")
+
+
+def propose(tid, old, new):
+    """Replace `old` (exactly once in the paper) by `new`, and record the change on card tid."""
+    s = read_tex()
+    _once(s, old)
+    write_tex(s.replace(old, new, 1))
+    props = proposals()
+    _card(props, tid)["changes"].append({"old": old, "new": new})
+    _dump("proposals.json", props)
+
+
+def replace_change(tid, k, text):
+    """Make the paper hold `text` where change k of card tid currently holds its `new` text."""
+    props = proposals()
+    c = _card(props, tid)["changes"][k]
+    s = read_tex()
+    if c["new"]:
+        _once(s, c["new"])
+        if text == "" and c["new"] + "\n" in s:
+            s = s.replace(c["new"] + "\n", "", 1)   # deleting whole lines leaves no blank line
+        else:
+            s = s.replace(c["new"], text, 1)
+    else:
+        anchor = c.get("anchor")
+        if not anchor:
+            raise ValueError("change removed its text and has no anchor line; re-insert it by hand")
+        _once(s, anchor + "\n")
+        s = s.replace(anchor + "\n", anchor + "\n" + text + "\n", 1)
+    write_tex(s)
+    c["new"] = text
+    _dump("proposals.json", props)
+
+
+def reject_all(tid):
+    """Put back the original text of every change on card tid (last change first)."""
+    for k in reversed(range(len(proposals().get(tid, {}).get("changes", [])))):
+        replace_change(tid, k, proposals()[tid]["changes"][k]["old"])
+
+
+def _comment_lines(text):
+    return "\n".join("% " + l if l.strip() and not l.lstrip().startswith("%") else l
+                     for l in text.split("\n"))
+
+
+def comment_out_thread(tid):
+    """Comment out every live comment of the thread (it is then resolved). Returns how many."""
+    t = thread(tid)
+    L = read_tex().split("\n")
+    n = 0
+    for c in reversed([c for c in t["comments"] if c["live"]]):
+        l0, c0, l1, c1 = c["line"] - 1, c["col"], c["end_line"] - 1, c["end_col"]
+        if not L[l0][:c0].strip() and not L[l1][c1:].strip():
+            for i in range(l0, l1 + 1):                       # the comment fills its own lines
+                if L[i].strip():
+                    L[i] = "% " + L[i]
+        else:                                                 # inline: move it to its own commented line
+            body = "\n".join([L[l0][c0:]] + L[l0 + 1:l1] + [L[l1][:c1]]) if l1 > l0 else L[l0][c0:c1]
+            rest = (L[l0][:c0].rstrip() + " " + L[l1][c1:].lstrip()).rstrip()
+            L[l0:l1 + 1] = [rest] + _comment_lines(body).split("\n")
+        n += 1
+    write_tex("\n".join(L))
+    return n
+
+
+def add_comment(tid, macro, text):
+    """Add \\macro{text} as a new line right after the thread, so it joins the thread."""
+    t = thread(tid)
+    L = read_tex().split("\n")
+    L.insert(t["end_line"], "\\" + macro + "{" + text + "}")
+    write_tex("\n".join(L))

@@ -1,0 +1,36 @@
+\documentclass{article}
+\usepackage{xcolor}
+\newif\ifaddcomments\addcommentstrue
+\newcommand{\todo}[1]{\ifaddcomments{\textcolor{red}{[TODO: #1]}}\fi}
+\newcommand{\alice}[1]{\ifaddcomments{\textcolor{blue}{[Alice: #1]}}\fi}
+\newcommand{\bob}[1]{\ifaddcomments{\textcolor{violet}{[Bob: #1]}}\fi}
+\newcommand{\carol}[1]{\ifaddcomments{\textcolor{teal}{[Carol: #1]}}\fi}
+
+\begin{document}
+
+\section{Introduction}
+Learned action models make planning possible without a hand-written domain.
+We show that a policy cloned from demonstrations can guide a planner on problems that are far from the demonstrations.
+\alice{``far from the demonstrations'': say how far, or point to the section that defines the distance.}
+\bob{Section 5 defines it; I will add the reference.}
+\alice{Fine, but also give one number in the introduction.}
+
+\section{Experiments}
+\subsection{Setup}
+The policy is a two-layer MLP with 128 hidden units.
+The policy is trained for 50 epochs on the demonstrations.
+\carol{``trained for 50 epochs'': how was the number of epochs chosen? Validation split, early stopping?}
+
+Each configuration gets 60 seconds per problem \todo{check this is the same for both planners}.
+
+\subsection{Results}
+Figure 2 shows success against problem size.
+% \alice{Report the number of runs behind each point.}
+% \bob{Done: 10 runs per point, now in the caption.}
+
+\section{Conclusions}
+First, we test only small domains.
+Second, our domains are all small.
+\carol{The second limitation repeats the first one.}
+
+\end{document}
