@@ -72,6 +72,12 @@ directory ignores itself in git. Claude handles the decisions: it runs
 `wait_queue.py` in the background, which wakes it when you click Done, and
 applies them with `review_lib.py`. `CLAUDE.md` is its handbook; point Claude to it.
 
+### Or as a Claude artifact
+
+The cards can also live in a private artifact on claude.ai instead of the local
+page: nothing to run, and easy to share with co-authors, at the cost of putting
+the paper's text on claude.ai. See [`Claude Artifact/`](Claude%20Artifact/) (a prototype).
+
 ### Recommended: one subagent per suggested edit
 
 Use it with several subagents, one per edit suggestion: give each card's work

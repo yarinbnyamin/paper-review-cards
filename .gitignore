@@ -2,3 +2,6 @@
 .review-cards/
 __pycache__/
 .DS_Store
+
+# built artifact page
+Claude Artifact/review-cards.html
