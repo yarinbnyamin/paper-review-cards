@@ -14,8 +14,8 @@ POST /api/skip        -> skip a card (no Claude involved); it comes back if its 
 POST /api/unskip      -> undo a skip
 
 Statuses: pending (yellow, with Claude), review (red, Claude answered: check
-again), done (green), skip (grey), reopened (skipped, but the thread has changed
-since). A thread whose comments are all commented out counts as done unless it
+again), done (green), skip (grey), reopened (skipped or kept, but the thread has
+changed since). A thread whose comments are all commented out counts as done unless it
 is pending or under review.
 """
 import argparse
@@ -58,6 +58,8 @@ def effective(t, rec):
         return s
     if not t["open"]:
         return "done"
+    if s == "done" and rec.get("sig"):          # kept as is: done until the thread changes
+        return "done" if rec["sig"] == t["sig"] else "reopened"
     return ""                                   # live comments and no open decision: to do
 
 
@@ -70,7 +72,8 @@ def items():
     for t in scan.threads(tex):
         p = props.get(t["id"], {})
         t.update(status=effective(t, st["cards"].get(t["id"], {})), rev=p.get("rev", 0),
-                 changes=p.get("changes", []), replies=p.get("replies", []))
+                 changes=p.get("changes", []), replies=p.get("replies", []),
+                 needs_check=p.get("needs_check"), drafting=p.get("drafting", False))
         out.append(t)
     return out
 

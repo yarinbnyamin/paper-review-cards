@@ -85,6 +85,29 @@ class Lib(unittest.TestCase):
         self.write("% \\alice{old}")
         self.assertEqual(server.effective(R.threads()[0], {}), "done")
 
+    def test_keep_is_done_until_thread_changes(self):
+        self.write("Text.\n\\alice{why?}\nMore.")
+        t = R.threads()[0]
+        R.keep(t["id"])
+        rec = R.state()["cards"][t["id"]]
+        self.assertEqual(server.effective(t, rec), "done")
+        R.add_comment(t["id"], "bob", "new point")
+        self.assertEqual(server.effective(R.thread(t["id"]), rec), "reopened")
+
+    def test_edit_thread_replaces_its_lines(self):
+        self.write("Text.\n\\alice{why?}\n\\bob{because}\nMore.")
+        tid = R.threads()[0]["id"]
+        R.edit_thread(tid, "\\alice{why? (rephrased)}\n\\bob{because}")
+        self.assertIn("Text.\n\\alice{why? (rephrased)}\n\\bob{because}\nMore.", self.body())
+
+    def test_set_meta_badges(self):
+        self.write("\\alice{x}")
+        tid = R.threads()[0]["id"]
+        R.set_meta(tid, needs_check="data", drafting=True)
+        self.assertEqual(R.proposals()[tid]["needs_check"], "data")
+        R.set_meta(tid, needs_check="", drafting=False)
+        self.assertIsNone(R.proposals()[tid]["needs_check"])
+
 
 if __name__ == "__main__":
     unittest.main()

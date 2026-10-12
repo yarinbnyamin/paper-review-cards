@@ -59,6 +59,8 @@ textarea{width:100%;min-height:80px;margin-top:10px;font:13px/1.5 ui-monospace,M
 .hint{font-size:12px;color:var(--mute);margin-top:6px}
 .nav{display:flex;justify-content:space-between;margin-top:14px}.kbd{font-size:12px;color:var(--mute)}
 .none{color:var(--mute);text-align:center;padding:40px 0}
+.badge{font-size:11px;padding:2px 6px;border-radius:4px;background:var(--you);color:var(--chg)}.badge.pr{background:var(--ins);color:var(--insink)}
+button.skip{border-color:#8a8a8f;color:#8a8a8f}
 </style></head><body>
 <header><h1>Paper review cards</h1><span class="pill" id="file"></span><span class="pill" id="count"></span><div class="bar"><i id="prog"></i></div>
 <label class="pill"><input type="checkbox" id="showdone"> Show resolved</label></header>
@@ -82,7 +84,7 @@ while(i<n)o+='<del>'+esc(x[i++])+'</del>';while(j<m)nn+='<ins>'+esc(y[j++])+'</i
 const LABEL={pending:'with Claude',done:'resolved',review:'Claude answered: check again',skip:'skipped',reopened:'skipped, but the thread has a new comment'};
 function who(m){return (META.macros[m]||{}).label||m}
 function colour(m){return (META.macros[m]||{}).color||''}
-function view(){ITEMS=SHOWDONE?ALL:ALL.filter(it=>it.status!=='done');}
+function view(){ITEMS=(SHOWDONE?ALL:ALL.filter(it=>it.status!=='done')).slice().sort((a,b)=>(!!b.needs_check-!!a.needs_check)||(a.line-b.line));}
 function cur(){let k=ITEMS.findIndex(it=>it.id===curId);if(k<0){k=0;curId=ITEMS[0]&&ITEMS[0].id}return k}
 function draft(it){const d=D[it.id];if(d&&(d.rev||0)!==(it.rev||0)){delete D[it.id]}return D[it.id]||(D[it.id]={rev:it.rev||0})}
 
@@ -97,7 +99,7 @@ function source(it){const n0=it.line-it.before.length;let h='';
 
 function convo(it){const ev=[];
  Q.filter(e=>e.id===it.id).forEach(e=>{const t={change:e.instruction||'(empty message)',reply:`Reply as ${who(e.macro||'')}: ${e.text||''}`,
-  accept:'Accepted the changes',reject:'Rejected the changes (revert)',edit:'Sent my own edit',resolve:'Resolve: comment the thread out'}[e.decision]||e.decision;
+  accept:'Accepted the changes',reject:'Rejected the changes (revert)',edit:'Sent my own edit',resolve:'Resolve: comment the thread out',keep:'Keep: no change'}[e.decision]||e.decision;
   ev.push({ts:e.ts||0,k:(e.decision==='change'||e.decision==='reply')?'you':'sys',t})});
  (it.replies||[]).forEach(r=>ev.push({ts:r.ts||0,k:'claude',t:r.text}));
  if(!ev.length)return '';ev.sort((a,b)=>a.ts-b.ts);
@@ -110,24 +112,36 @@ function changes(it,d){if(!it.changes.length)return '';return it.changes.map((c,
  <div><span class="lab">Modified</span>${n||'<span class="empty">(removed)</span>'}</div></div>
  ${d.d==='edit'?`<textarea class="edit" data-k="${k}">${esc((d.e||[])[k]??c.new)}</textarea>`:''}</div>`}).join('')}
 
+const CHECK={plot:'plot change',experiment:'needs an experiment',data:'numbers checked in our data',code:'checked in the code'};
+function commented(lines){return lines.map(l=>l.trim()&&!l.trim().startsWith('%')?'% '+l:l)}
+function decisionView(it,d){   // a card with no proposal: the thread itself is what the decision changes
+ const now=it.lines.join('\n');let after;
+ if(d.d==='resolve')after=commented(it.lines).join('\n');else if(d.d==='edit')after=null;else after=now;
+ const [o,n]=after===null?[esc(now),'']:wdiff(now,after);
+ return `<div class="chg"><div class="h">Your decision on the thread</div><div class="side">
+ <div><span class="lab">In the paper now</span>${o}</div>
+ <div><span class="lab">After your decision</span>${after===null?'<span class="empty">(your version, below)</span>':(n||'<span class="empty">(removed)</span>')}</div></div>
+ ${d.d==='edit'?`<textarea class="edit" data-k="0">${esc((d.e||[])[0]??now)}</textarea>`:''}</div>`}
 function render(){view();const box=document.getElementById('card');
  if(!ITEMS.length){box.innerHTML=`<div class="card none">No open comment threads.${ALL.length?' Tick "Show resolved" to see the others.':''}</div>`;dots();return}
  const k=cur(),it=ITEMS[k],d=draft(it),hasC=it.changes.length>0;
  const opts=Object.keys(META.macros).map(m=>`<option value="${esc(m)}" ${m===ME?'selected':''}>${esc(who(m))} (\\${esc(m)})</option>`).join('');
- let h=`<div class="card"><div class="meta"><b style="color:var(--ink)">${k+1} / ${ITEMS.length}</b><span>${esc(it.section||'(before the first section)')}</span><span>line ${it.line}</span>${it.status?`<span class="sbadge sb-${it.status}">${LABEL[it.status]}</span>`:''}</div>`;
- h+=thread(it)+convo(it)+source(it)+changes(it,d);
- h+=`<div class="actions">${hasC?`<button class="a ${d.d==='accept'?'on':''}" data-d="accept">Accept</button><button class="r ${d.d==='reject'?'on':''}" data-d="reject">Reject (revert)</button><button class="e ${d.d==='edit'?'on':''}" data-d="edit">Edit myself</button>`:''}
- <button class="c ${d.d==='change'?'on':''}" data-d="change">Ask Claude…</button>
- <button class="p ${d.d==='reply'?'on':''}" data-d="reply">Reply in the paper…</button>
- <button class="v ${d.d==='resolve'?'on':''}" data-d="resolve">Resolve (comment out)</button>
+ const B=(cls,dd,label)=>`<button class="${cls} ${d.d===dd?'on':''}" data-d="${dd}">${label}</button>`;
+ let h=`<div class="card"><div class="meta"><b style="color:var(--ink)">${k+1} / ${ITEMS.length}</b><span>${esc(it.section||'(before the first section)')}</span><span>line ${it.line}</span>${it.status?`<span class="sbadge sb-${it.status}">${LABEL[it.status]}</span>`:''}${it.needs_check?`<span class="badge">${esc(CHECK[it.needs_check]||it.needs_check)}</span>`:''}${it.drafting?'<span class="sbadge sb-pending">proposal coming</span>':''}${hasC?'<span class="badge pr">Claude proposed a change</span>':''}</div>`;
+ h+=thread(it)+convo(it)+source(it)+(hasC?changes(it,d):decisionView(it,d));
+ h+=`<div class="actions">${hasC?B('a','accept','Accept')+B('r','reject','Reject (revert)')+B('e','edit','Edit myself')
+   :B('a','resolve','Resolve (comment out)')+B('r','keep','Keep (no change)')+B('e','edit','Edit myself')}
+ ${B('c','change','Ask Claude…')}${B('p','reply','Reply in the paper…')}
  ${it.status==='skip'||it.status==='reopened'?`<button class="skip" id="unskip">Unskip</button>`:`<button class="skip" id="skip">Skip for now</button>`}</div>
  ${d.d==='change'?`<textarea id="t" placeholder="What should Claude do or answer?">${esc(d.t||'')}</textarea>`:''}
  ${d.d==='reply'?`<div class="actions" style="margin-top:10px"><select id="mac">${opts}</select><span class="hint">adds \\macro{…} under the thread, as your own comment</span></div><textarea id="t" placeholder="Your reply">${esc(d.t||'')}</textarea>`:''}
- ${d.d==='resolve'?`<div class="hint">Claude comments out every live comment of this thread; the paper text is not changed.</div>`:''}
+ <div class="hint">${({accept:'Keeps Claude\'s changes and comments the thread out.',reject:'Puts the original text back and comments the thread out.',
+   resolve:'Comments out every live comment of this thread; the paper text is not changed.',keep:'Leaves the paper as it is and closes the card (it comes back if someone adds to the thread).',
+   edit:hasC?'Your version replaces Claude\'s text; the thread is then commented out.':'Your version replaces the thread\'s lines (edit the comments, or the text around them).'})[d.d]||''}</div>
  <div class="actions" style="margin-top:12px"><button class="done" id="done" ${d.d?'':'disabled'}>Done &rarr; send to Claude</button></div></div>`;
  box.innerHTML=h;
- box.querySelectorAll('.actions button[data-d]').forEach(b=>b.onclick=()=>{d.d=b.dataset.d;save();render();const t=document.getElementById('t');if(t)t.focus()});
- box.querySelectorAll('.edit').forEach(x=>x.oninput=()=>{d.e=d.e||it.changes.map(c=>c.new);d.e[+x.dataset.k]=x.value;save()});
+ box.querySelectorAll('.actions button[data-d]').forEach(b=>b.onclick=()=>{d.d=b.dataset.d;save();render();const t=document.getElementById('t')||document.querySelector('.edit');if(t)t.focus()});
+ box.querySelectorAll('.edit').forEach(x=>x.oninput=()=>{d.e=d.e||(hasC?it.changes.map(c=>c.new):[it.lines.join('\n')]);d.e[+x.dataset.k]=x.value;save()});
  const t=document.getElementById('t');if(t)t.oninput=()=>{d.t=t.value;save()};
  const mac=document.getElementById('mac');if(mac){if(!ME)ME=mac.value;mac.onchange=()=>{ME=mac.value;save()}}
  const sk=document.getElementById('skip');if(sk)sk.onclick=()=>post('/api/skip',{id:it.id,sig:it.sig}).then(refresh).then(()=>step(1));
@@ -145,7 +159,7 @@ function step(s){const k=cur()+s;if(k>=0&&k<ITEMS.length){curId=ITEMS[k].id;rend
 function post(u,b){return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})}
 async function send(it,d){if(!d.d)return;const b=document.getElementById('done');b.disabled=true;b.textContent='Sending…';
  const body={id:it.id,sig:it.sig,rev:it.rev||0,line:it.line,decision:d.d,instruction:d.d==='change'?(d.t||''):'',
-  edits:d.d==='edit'?it.changes.map((c,k)=>(d.e||[])[k]??c.new):null,macro:d.d==='reply'?ME:null,text:d.d==='reply'?(d.t||''):null};
+  edits:d.d==='edit'?(it.changes.length?it.changes.map((c,k)=>(d.e||[])[k]??c.new):[(d.e||[])[0]??it.lines.join('\n')]):null,proposed:it.changes.length>0,macro:d.d==='reply'?ME:null,text:d.d==='reply'?(d.t||''):null};
  try{await post('/api/done',body);delete D[it.id];save();
   const nx=ITEMS.findIndex((x,j)=>j>cur()&&!['pending','done','skip'].includes(x.status));if(nx>=0)curId=ITEMS[nx].id;await refresh()}
  catch(e){b.disabled=false;b.textContent='Failed: retry'}}

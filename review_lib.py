@@ -97,6 +97,23 @@ def set_status(tid, status, **extra):
     _dump("state.json", st)
 
 
+def set_meta(tid, needs_check=None, drafting=None):
+    """Card badges: needs_check ("plot", "experiment", "data", "code" or free text; "" clears it),
+    drafting=True while a proposal is being prepared."""
+    props = proposals()
+    c = _card(props, tid)
+    if needs_check is not None:
+        c["needs_check"] = needs_check or None
+    if drafting is not None:
+        c["drafting"] = bool(drafting)
+    _dump("proposals.json", props)
+
+
+def keep(tid):
+    """Keep: no change to the paper; the card is done until someone adds to the thread."""
+    set_status(tid, "done", sig=thread(tid)["sig"])
+
+
 def reply(tid, text):
     """Claude's message on the card: kept in its conversation, and the card is revised (rev + 1)."""
     props = proposals()
@@ -203,6 +220,16 @@ def comment_out_thread(tid):
         n += 1
     write_tex("\n".join(L))
     return n
+
+
+def edit_thread(tid, text):
+    """Replace the thread's lines (as the card shows them) by `text`: the user's own version."""
+    t = thread(tid)
+    L = read_tex().split("\n")
+    if L[t["line"] - 1:t["end_line"]] != t["lines"]:
+        raise ValueError("the thread's lines changed since the card was built")
+    L[t["line"] - 1:t["end_line"]] = text.split("\n")
+    write_tex("\n".join(L))
 
 
 def add_comment(tid, macro, text):

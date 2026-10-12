@@ -30,29 +30,62 @@ R.configure("<paper>/.review-cards")
 for e in R.pending(): ...
 ```
 
-Each entry is `{id, sig, rev, line, decision, instruction, edits, macro, text, ts}`.
+Each entry is `{id, sig, rev, line, decision, instruction, edits, proposed, macro, text, ts}`.
 `id` is the thread id. Look the thread up with `R.thread(id)`; if the user edited
 the first comment since, the id may no longer exist: find the thread by `line`
-and tell the user.
+and tell the user. `proposed` says whether the card had Claude's changes when
+the user decided.
+
+A card with Claude's changes offers Accept / Reject / Edit; a card without them
+offers Resolve / Keep / Edit (the edit is then the thread's own lines). Both
+offer Ask Claude, Reply in the paper and Skip.
 
 | decision | what to do |
 |---|---|
 | `change` (Ask Claude) | Do what the instruction says. Edit the paper with `R.propose(id, old, new)` so the edit shows on the card as a change. If it is only a question, change nothing. Always answer with `R.reply(id, text)`, then `R.set_status(id, "review")` (red). |
 | `accept` | The card's changes stay. `R.comment_out_thread(id)`, `R.set_status(id, "done")`. |
 | `reject` | `R.reject_all(id)` puts the original text back. Then `R.comment_out_thread(id)` and `R.set_status(id, "done")`. |
-| `edit` | `R.replace_change(id, k, edits[k])` for every change, then as for accept. |
-| `reply` | `R.add_comment(id, macro, text)` adds the user's own comment under the thread. The thread now waits for the others, so skip it with its new signature: `R.set_status(id, "skip", sig=R.thread(id)["sig"])`. It comes back when someone answers. |
+| `edit`, `proposed` true | `R.replace_change(id, k, edits[k])` for every change, then as for accept. |
+| `edit`, `proposed` false | `R.edit_thread(id, edits[0])` replaces the thread's lines with the user's version; then `R.set_status(id, "done", sig=R.thread(id)["sig"])` if it still has live comments. |
 | `resolve` | `R.comment_out_thread(id)`, `R.set_status(id, "done")`. |
+| `keep` | No change: `R.keep(id)`. The card is done until someone adds to the thread. |
+| `reply` | `R.add_comment(id, macro, text)` adds the user's own comment under the thread. The thread now waits for the others, so skip it with its new signature: `R.set_status(id, "skip", sig=R.thread(id)["sig"])`. It comes back when someone answers. |
 
 Skip and unskip never reach Claude: the server records them itself.
 
 Rules:
 - Every Claude answer goes through `R.reply`, so the card keeps the conversation.
-- Edit the paper only through `R.propose` / `R.replace_change` for text the card
-  shows as a change; they refuse when the text is not found exactly once. Fix such
-  cases by hand rather than forcing them.
+- Edit the paper only through `R.propose` / `R.replace_change` / `R.edit_thread`;
+  they refuse when the text is not found exactly once. Fix such cases by hand
+  rather than forcing them.
 - Follow the paper's own conventions (its CLAUDE.md if it has one), rebuild it
   after a batch, and do not commit or push unless the user asks.
+
+## Work per card goes to subagents
+
+Hand the work on each card to its own subagent (Sonnet 5.5), all in parallel,
+and only verify their results before applying them. This covers every `change`
+entry and the proposal round below. Accept, reject, edit, resolve, keep and
+reply are mechanical: apply them directly.
+
+A subagent reads the paper (and the code or data it needs) but writes only a JSON
+result to the scratchpad: `{"id", "changes": [{"old", "new"}], "reply",
+"needs_check"}`. It never writes the `.tex` or the data directory, since parallel
+writers race on those files. Claude checks each result (the `old` text occurs
+once, numbers match the data), then applies it with `R.propose` and `R.reply`.
+
+## Proposing in advance
+
+When the user asks for proposals, give every open card without changes to a
+subagent as above: what the comments ask for and a proposed edit, or "no change
+needed" with the reason.
+- Mark the cards first with `R.set_meta(id, drafting=True)`; the page shows
+  "proposal coming".
+- After applying a result, `R.set_meta(id, drafting=False, needs_check=...)`.
+  Use `plot`, `experiment`, `data` or `code` when the user must check something
+  outside the text; those cards are listed first.
+- A card whose proposal is "no change" gets only the reply, and keeps Resolve /
+  Keep.
 
 ## Developing
 
