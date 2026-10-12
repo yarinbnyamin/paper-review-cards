@@ -40,13 +40,18 @@ The paper is rescanned on every request, so the page follows edits to the
 - the thread, each comment with its author and line;
 - the conversation with Claude on this card;
 - the thread in the paper, with a few lines around it;
-- Claude's changes, if any, as an original/modified word diff.
+- what your decision does: Claude's changes as an original/modified word diff,
+  or, when there are none yet, the thread itself ("In the paper now" vs "After
+  your decision").
 
-Choices: **Accept** / **Reject (revert)** / **Edit myself** (when Claude has
-proposed changes), **Ask Claude…**, **Reply in the paper…** (adds your own
-`\macro{...}` under the thread; the card then waits for the others' answer),
-**Resolve (comment out)**, and **Skip for now**. **Done → send to Claude**
-sends the choice.
+Choices: with Claude's changes, **Accept** / **Reject (revert)** / **Edit
+myself**; without them, **Resolve (comment out)** / **Keep (no change)** /
+**Edit myself** (rewrite the thread's lines). On every card: **Ask Claude…**,
+**Reply in the paper…** (adds your own `\macro{...}` under the thread; the card
+then waits for the others' answer) and **Skip for now**. Kept and skipped cards
+come back when someone adds to their thread. **Done → send to Claude** sends
+the choice. Cards Claude marked as needing a check outside the text (a plot, an
+experiment, data, code) are listed first.
 
 Colours: dashed = chosen, not sent; **yellow** = with Claude; **red** = Claude
 answered, check again (or a skipped thread changed); **grey** = skipped;
@@ -66,6 +71,17 @@ Decisions and state are kept in `.review-cards/` next to the `.tex`; that
 directory ignores itself in git. Claude handles the decisions: it runs
 `wait_queue.py` in the background, which wakes it when you click Done, and
 applies them with `review_lib.py`. `CLAUDE.md` is its handbook; point Claude to it.
+
+### Recommended: one subagent per suggested edit
+
+Use it with several subagents, one per edit suggestion: give each card's work
+(drafting a proposal, or answering an "Ask Claude") to its own subagent, run
+them in parallel, and let the main Claude session only verify their results and
+apply them. Each subagent reads the paper and writes its suggestion to a file;
+only the main session edits the `.tex`, so parallel agents never overwrite each
+other. A whole round of cards then takes about as long as the slowest card.
+`CLAUDE.md` describes the exact procedure ("Work per card goes to subagents"
+and "Proposing in advance").
 
 Python 3.8+ only, no dependencies.
 
