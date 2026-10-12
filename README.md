@@ -95,4 +95,5 @@ Python 3.8+ only, no dependencies.
 | `review_lib.py` | what Claude uses to act on a card: `propose`, `replace_change`, `reject_all`, `comment_out_thread`, `add_comment`, `reply`, `set_status` |
 | `wait_queue.py` | waits for new decisions (checks every `POLL` seconds, default 60) |
 | `examples/demo.tex` | a small paper with every kind of thread |
+| `examples/screenshots.sh` | rebuilds the two README screenshots from the demo (needs Chrome and Pillow) |
 | `tests/` | `python3 -m unittest discover -s tests` |
